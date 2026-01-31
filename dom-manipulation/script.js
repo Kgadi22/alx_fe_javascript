@@ -1,3 +1,9 @@
+// Explicit fetch function for server quotes (for user/manual use)
+async function fetchQuotesFromServer() {
+  const serverQuotes = await fetchServerQuotes();
+  notifyUser(`Fetched ${serverQuotes.length} quotes from server.`, 'info');
+  return serverQuotes;
+}
 // --- Server Sync Simulation ---
 const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts'; // Simulate with posts as quotes
 let syncInterval = null;
