@@ -1,3 +1,27 @@
+// Sync quotes with server: fetch, merge, and post local changes
+async function syncQuotes() {
+  // Fetch server quotes
+  const serverQuotes = await fetchServerQuotes();
+  let updated = false;
+  // Merge: add new server quotes to local
+  serverQuotes.forEach(sq => {
+    if (!quotes.some(lq => lq.text === sq.text)) {
+      quotes.push(sq);
+      updated = true;
+    }
+  });
+  // Optionally, post all local quotes to server (simulate two-way sync)
+  await postQuotesToServer(quotes);
+  if (updated) {
+    saveQuotes();
+    createCategorySelector();
+    populateCategories();
+    filterQuotes();
+    notifyUser('Quotes synced with server. (Merged)', 'info');
+  } else {
+    notifyUser('Quotes already up to date with server.', 'info');
+  }
+}
 // POST quotes to server (simulation)
 async function postQuotesToServer(quotesToPost) {
   try {
