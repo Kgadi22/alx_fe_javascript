@@ -1,9 +1,27 @@
-// Initial quotes array with categories
-const quotes = [
+// Load quotes from localStorage or use defaults
+let quotes = [];
+const defaultQuotes = [
   { text: "The only way to do great work is to love what you do.", category: "Motivation" },
   { text: "Life is what happens when you're busy making other plans.", category: "Life" },
   { text: "Success is not the key to happiness. Happiness is the key to success.", category: "Success" }
 ];
+
+function loadQuotes() {
+  const stored = localStorage.getItem('quotes');
+  if (stored) {
+    try {
+      quotes = JSON.parse(stored);
+    } catch (e) {
+      quotes = [...defaultQuotes];
+    }
+  } else {
+    quotes = [...defaultQuotes];
+  }
+}
+
+function saveQuotes() {
+  localStorage.setItem('quotes', JSON.stringify(quotes));
+}
 
 // Helper to get unique categories
 function getCategories() {
@@ -19,6 +37,8 @@ function showRandomQuote(category = null) {
   }
   const random = filtered[Math.floor(Math.random() * filtered.length)];
   document.getElementById('quoteDisplay').innerHTML = `<blockquote>${random.text}</blockquote><footer>${random.category}</footer>`;
+  // Save last viewed quote in sessionStorage
+  sessionStorage.setItem('lastViewedQuote', JSON.stringify(random));
 }
 
 // Create category selector dynamically
@@ -52,10 +72,46 @@ function addQuote() {
     return;
   }
   quotes.push({ text, category });
+  saveQuotes();
   createCategorySelector();
   document.getElementById('newQuoteText').value = '';
   document.getElementById('newQuoteCategory').value = '';
   showRandomQuote(category);
+// Export quotes to JSON file
+function exportToJsonFile() {
+  const dataStr = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'quotes.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Import quotes from JSON file
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function(e) {
+    try {
+      const importedQuotes = JSON.parse(e.target.result);
+      if (Array.isArray(importedQuotes)) {
+        quotes.push(...importedQuotes);
+        saveQuotes();
+        createCategorySelector();
+        showRandomQuote();
+        alert('Quotes imported successfully!');
+      } else {
+        alert('Invalid JSON format.');
+      }
+    } catch (err) {
+      alert('Error parsing JSON file.');
+    }
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
 }
 
 document.getElementById('newQuote').addEventListener('click', () => {
@@ -76,13 +132,24 @@ function createAddQuoteForm() {
     <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
     <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
     <button id="addQuoteBtn">Add Quote</button>
+    <button id="exportBtn" type="button">Export Quotes (JSON)</button>
+    <input type="file" id="importFile" accept=".json" style="display:inline-block;" />
   `;
   document.body.appendChild(form);
   document.getElementById('addQuoteBtn').addEventListener('click', addQuote);
+  document.getElementById('exportBtn').addEventListener('click', exportToJsonFile);
+  document.getElementById('importFile').addEventListener('change', importFromJsonFile);
 }
 
 // Initial setup
+loadQuotes();
 createCategorySelector();
-showRandomQuote();
-
 createAddQuoteForm();
+// Show last viewed quote if available in sessionStorage
+const lastViewed = sessionStorage.getItem('lastViewedQuote');
+if (lastViewed) {
+  const q = JSON.parse(lastViewed);
+  document.getElementById('quoteDisplay').innerHTML = `<blockquote>${q.text}</blockquote><footer>${q.category}</footer>`;
+} else {
+  showRandomQuote();
+}
