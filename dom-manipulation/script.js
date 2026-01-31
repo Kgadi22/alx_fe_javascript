@@ -1,3 +1,23 @@
+// POST quotes to server (simulation)
+async function postQuotesToServer(quotesToPost) {
+  try {
+    const response = await fetch(SERVER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(quotesToPost)
+    });
+    if (response.ok) {
+      notifyUser('Quotes posted to server successfully.', 'info');
+      return await response.json();
+    } else {
+      notifyUser('Failed to post quotes to server.', 'error');
+    }
+  } catch (e) {
+    notifyUser('Error posting to server.', 'error');
+  }
+}
 // Explicit fetch function for server quotes (for user/manual use)
 async function fetchQuotesFromServer() {
   const serverQuotes = await fetchServerQuotes();
