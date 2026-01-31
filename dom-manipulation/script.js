@@ -17,7 +17,7 @@ async function syncQuotes() {
     createCategorySelector();
     populateCategories();
     filterQuotes();
-    notifyUser('Quotes synced with server. (Merged)', 'info');
+    notifyUser('Quotes synced with server!', 'info');
   } else {
     notifyUser('Quotes already up to date with server.', 'info');
   }
