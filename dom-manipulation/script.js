@@ -1,3 +1,84 @@
+// --- Server Sync Simulation ---
+const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts'; // Simulate with posts as quotes
+let syncInterval = null;
+let lastServerSync = null;
+
+// Simulate fetching quotes from server (using JSONPlaceholder)
+async function fetchServerQuotes() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
+    // Simulate server quotes as {text, category}
+    return data.slice(0, 10).map(post => ({ text: post.title, category: 'Server' }));
+  } catch (e) {
+    notifyUser('Failed to fetch from server.', 'error');
+    return [];
+  }
+}
+
+// Merge server quotes, server wins on conflict
+async function syncWithServer() {
+  const serverQuotes = await fetchServerQuotes();
+  let updated = false;
+  // Find new server quotes not in local
+  serverQuotes.forEach(sq => {
+    if (!quotes.some(lq => lq.text === sq.text)) {
+      quotes.push(sq);
+      updated = true;
+    }
+  });
+  // Optionally, remove local quotes not on server (simulate server wins)
+  // quotes = quotes.filter(lq => serverQuotes.some(sq => sq.text === lq.text) || lq.category !== 'Server');
+  if (updated) {
+    saveQuotes();
+    createCategorySelector();
+    populateCategories();
+    filterQuotes();
+    notifyUser('Quotes updated from server. (Server data wins)', 'info');
+  }
+  lastServerSync = new Date();
+}
+
+// Notification system
+function notifyUser(message, type = 'info') {
+  let note = document.getElementById('notification');
+  if (!note) {
+    note = document.createElement('div');
+    note.id = 'notification';
+    note.style.position = 'fixed';
+    note.style.top = '10px';
+    note.style.right = '10px';
+    note.style.padding = '10px 20px';
+    note.style.zIndex = 1000;
+    note.style.borderRadius = '5px';
+    note.style.fontWeight = 'bold';
+    document.body.appendChild(note);
+  }
+  note.textContent = message;
+  note.style.background = type === 'error' ? '#f44336' : '#2196f3';
+  note.style.color = '#fff';
+  note.style.display = 'block';
+  setTimeout(() => { note.style.display = 'none'; }, 4000);
+}
+
+// Manual sync button
+function addSyncButton() {
+  let btn = document.getElementById('syncBtn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'syncBtn';
+    btn.textContent = 'Sync with Server';
+    btn.style.marginLeft = '10px';
+    btn.onclick = syncWithServer;
+    document.body.insertBefore(btn, document.getElementById('quoteDisplay'));
+  }
+}
+
+// Start periodic sync
+function startSyncInterval() {
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(syncWithServer, 20000); // every 20 seconds
+}
 // Track the currently selected category filter
 let selectedCategory = localStorage.getItem('lastCategoryFilter') || 'all';
 // Load quotes from localStorage or use defaults
@@ -199,3 +280,7 @@ if (lastViewed) {
   }
 }
 document.getElementById('categoryFilter').addEventListener('change', filterQuotes);
+
+// Add sync button and start periodic sync
+addSyncButton();
+startSyncInterval();
