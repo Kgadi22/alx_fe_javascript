@@ -62,9 +62,27 @@ document.getElementById('newQuote').addEventListener('click', () => {
   const catSel = document.getElementById('categorySelector');
   showRandomQuote(catSel && catSel.value ? catSel.value : null);
 });
-
 document.getElementById('addQuoteBtn').addEventListener('click', addQuote);
+
+// Dynamically create the add-quote form
+function createAddQuoteForm() {
+  // Remove existing form if present
+  const existing = document.getElementById('addQuoteForm');
+  if (existing) existing.remove();
+
+  const form = document.createElement('div');
+  form.id = 'addQuoteForm';
+  form.innerHTML = `
+    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
+    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+    <button id="addQuoteBtn">Add Quote</button>
+  `;
+  document.body.appendChild(form);
+  document.getElementById('addQuoteBtn').addEventListener('click', addQuote);
+}
 
 // Initial setup
 createCategorySelector();
 showRandomQuote();
+
+createAddQuoteForm();
